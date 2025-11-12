@@ -1,8 +1,6 @@
-import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
-import RegisterScreen from "./register";
-import LoginScreen from "./login";
+import React from "react";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -13,11 +11,11 @@ export default function HomeScreen() {
       <Text style={styles.subtitle}>Agenda tus notas y tu día</Text>
 
       <View style={styles.navContainer}>
-        <TouchableOpacity style={styles.navButton} onPress={() => router.push("/login")}> 
+        <TouchableOpacity style={styles.navButton} onPress={() => router.push("/login")}>
           <Text style={styles.navText}>Iniciar Sesión</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.navButton} onPress={() => router.push("/register")}> 
+        <TouchableOpacity style={styles.navButton} onPress={() => router.push("/register")}>
           <Text style={styles.navText}>Registrarse</Text>
         </TouchableOpacity>
       </View>
@@ -63,16 +61,5 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "bold",
     fontSize: 18,
-  },
-  logoutButton: {
-    backgroundColor: "#FF3B30",
-    paddingVertical: 10,
-    paddingHorizontal: 30,
-    borderRadius: 8,
-  },
-  logoutText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
   },
 });

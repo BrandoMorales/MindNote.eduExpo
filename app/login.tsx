@@ -1,122 +1,71 @@
-import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
-} from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
-import ForgotPassword from "./ForgotPassword";
+import React, { useEffect, useState } from "react";
+import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { getData, saveData } from "../utils/storage";
 
-export default function LoginScreen(): JSX.Element {
+export default function LoginScreen() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [remember, setRemember] = useState(false);
   const router = useRouter();
-  const [email, setEmail] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
-  const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
-    const loadUser = async () => {
-      const savedUser = await AsyncStorage.getItem("user");
-      if (savedUser) setUser(JSON.parse(savedUser));
-    };
-    loadUser();
+    (async () => {
+      const remembered = await getData("rememberedUser");
+      if (remembered) {
+        setEmail(remembered.email);
+        setPassword(remembered.password);
+        setRemember(true);
+      }
+    })();
   }, []);
 
-  const handleLogin = (): void => {
-    if (!email || !password) {
-      Alert.alert("Error", "Por favor completa todos los campos");
+  const handleLogin = async () => {
+    const user = await getData("user");
+
+    if (!user || user.email !== email || user.password !== password) {
+      Alert.alert("Error", "Correo o contraseña incorrectos");
       return;
     }
 
-    if (user && user.email === email && user.password === password) {
-      Alert.alert("Bienvenido", `Sesión iniciada como ${user.name}`);
-      router.replace("/notas");
+    if (remember) {
+      await saveData("rememberedUser", { email, password });
     } else {
-      Alert.alert("Error", "Correo o contraseña incorrectos");
+      await saveData("rememberedUser", null);
     }
+
+    Alert.alert("Bienvenido", `Hola ${user.name}`);
+    router.replace("/notas"); // Redirige a la pantalla de notas
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Iniciar Sesión</Text>
-
-      <TextInput
-        style={styles.input}
-        placeholder="Correo electrónico"
-        keyboardType="email-address"
-        value={email}
-        onChangeText={setEmail}
-        autoCapitalize="none"
-      />
-
-      <TextInput
-        style={styles.input}
-        placeholder="Contraseña"
-        secureTextEntry
-        value={password}
-        onChangeText={setPassword}
-      />
+      <TextInput style={styles.input} placeholder="Correo electrónico" value={email} onChangeText={setEmail} />
+      <TextInput style={styles.input} placeholder="Contraseña" secureTextEntry value={password} onChangeText={setPassword} />
+      
+      <TouchableOpacity onPress={() => setRemember(!remember)}>
+        <Text style={{ color: remember ? "#2563EB" : "#333" }}>
+          {remember ? "✓ Recordar contraseña" : "Recordar contraseña"}
+        </Text>
+      </TouchableOpacity>
 
       <TouchableOpacity style={styles.button} onPress={handleLogin}>
         <Text style={styles.buttonText}>Entrar</Text>
       </TouchableOpacity>
 
-      {/* 🔹 Enlace para recuperar contraseña */}
       <TouchableOpacity onPress={() => router.push("/ForgotPassword")}>
         <Text style={styles.link}>¿Olvidaste tu contraseña?</Text>
-      </TouchableOpacity>
-
-      {/* 🔹 Enlace para registro */}
-      <TouchableOpacity onPress={() => router.push("/register")}>
-        <Text style={styles.link}>¿No tienes cuenta? Regístrate</Text>
       </TouchableOpacity>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#F5F7FA",
-    padding: 20,
-  },
-  title: {
-    fontSize: 26,
-    fontWeight: "bold",
-    marginBottom: 30,
-    color: "#333",
-  },
-  input: {
-    width: "90%",
-    height: 50,
-    borderColor: "#ccc",
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 15,
-    marginBottom: 15,
-    backgroundColor: "#fff",
-  },
-  button: {
-    backgroundColor: "#007AFF",
-    width: "90%",
-    paddingVertical: 15,
-    borderRadius: 10,
-    alignItems: "center",
-    marginTop: 10,
-  },
-  buttonText: {
-    color: "#fff",
-    fontWeight: "bold",
-    fontSize: 16,
-  },
-  link: {
-    marginTop: 20,
-    color: "#007AFF",
-    fontWeight: "500",
-  },
+  container: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#E6F0FF", padding: 20 },
+  title: { fontSize: 26, fontWeight: "bold", marginBottom: 20, color: "#1E3A8A" },
+  input: { width: "80%", backgroundColor: "#fff", padding: 12, marginBottom: 10, borderRadius: 10 },
+  button: { backgroundColor: "#2563EB", padding: 12, borderRadius: 10, width: "80%", alignItems: "center", marginTop: 10 },
+  buttonText: { color: "#fff", fontWeight: "bold" },
+  link: { marginTop: 15, color: "#2563EB" },
 });

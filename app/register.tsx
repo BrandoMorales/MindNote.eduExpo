@@ -1,16 +1,15 @@
+import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-  View,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
   Text,
   TextInput,
-  Button,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
+  TouchableOpacity
 } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRouter } from "expo-router";
-import NotasScreen from "./notas";
+import { saveData } from "../utils/storage";
 
 export default function RegisterScreen() {
   const router = useRouter();
@@ -19,57 +18,74 @@ export default function RegisterScreen() {
   const [password, setPassword] = useState("");
 
   const handleRegister = async () => {
-    if (!name || !email || !password) {
-      Alert.alert("Error", "Por favor completa todos los campos");
+    if (!name.trim() || !email.trim() || !password.trim()) {
+      Alert.alert("Error", "Todos los campos son obligatorios.");
       return;
     }
 
     try {
       const newUser = { name, email, password };
 
-      // Guardar usuario en AsyncStorage
-      await AsyncStorage.setItem("user", JSON.stringify(newUser));
+      // Guardar usuario usando la función de storage
+      await saveData("user", newUser);
 
-      Alert.alert("Registro exitoso", `Usuario ${name} registrado correctamente`);
-      router.replace("/notas");
+      // Opcional: Guardar también como "rememberedUser" para un login fluido la próxima vez
+      await saveData("rememberedUser", { email, password });
+
+      Alert.alert(
+        "Registro exitoso",
+        `Usuario ${name} registrado correctamente`
+      );
+      router.replace("/notas"); // Redirige a la pantalla de notas después del registro
     } catch (error) {
-      Alert.alert("Error", "No se pudo registrar el usuario");
+      console.error("Error en el registro:", error);
+      Alert.alert("Error", "No se pudo completar el registro.");
     }
   };
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={styles.container}
+    >
       <Text style={styles.title}>Crear Cuenta</Text>
+      <Text style={styles.subtitle}>
+        Regístrate para empezar a organizar tus notas.
+      </Text>
 
       <TextInput
         style={styles.input}
         placeholder="Nombre completo"
         value={name}
         onChangeText={setName}
+        autoCapitalize="words"
       />
 
       <TextInput
         style={styles.input}
         placeholder="Correo electrónico"
-        keyboardType="email-address"
         value={email}
         onChangeText={setEmail}
+        keyboardType="email-address"
+        autoCapitalize="none"
       />
 
       <TextInput
         style={styles.input}
         placeholder="Contraseña"
-        secureTextEntry
         value={password}
         onChangeText={setPassword}
+        secureTextEntry
       />
 
-      <Button title="Registrarse" onPress={handleRegister} color="#007AFF" />
+      <TouchableOpacity style={styles.button} onPress={handleRegister}>
+        <Text style={styles.buttonText}>Registrarse</Text>
+      </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => router.push("/")}>
+      <TouchableOpacity onPress={() => router.push("/login")}>
         <Text style={styles.link}>¿Ya tienes cuenta? Inicia sesión</Text>
       </TouchableOpacity>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -78,28 +94,49 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#F5F7FA",
+    backgroundColor: "#E6F0FF",
     padding: 20,
   },
   title: {
-    fontSize: 26,
+    fontSize: 28,
     fontWeight: "bold",
+    color: "#1E3A8A",
+    marginBottom: 10,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: "#555",
     marginBottom: 30,
-    color: "#333",
+    textAlign: "center",
   },
   input: {
     width: "90%",
-    height: 50,
-    borderColor: "#ccc",
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 15,
-    marginBottom: 15,
     backgroundColor: "#fff",
+    padding: 15,
+    marginBottom: 15,
+    borderRadius: 10,
+    fontSize: 16,
+    borderWidth: 1,
+    borderColor: "#DDD",
+  },
+  button: {
+    backgroundColor: "#2563EB",
+    paddingVertical: 15,
+    borderRadius: 10,
+    width: "90%",
+    alignItems: "center",
+    marginTop: 10,
+    elevation: 3,
+  },
+  buttonText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 18,
   },
   link: {
     marginTop: 20,
-    color: "#007AFF",
-    fontWeight: "500",
+    color: "#2563EB",
+    fontSize: 16,
+    fontWeight: "600",
   },
 });
